@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Env / secrets (ห้าม Commit)
+.env
+.env.local
+*.local
+
+# Build output
+dist/
+client/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store

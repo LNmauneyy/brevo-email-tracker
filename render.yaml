@@ -1,0 +1,55 @@
+# render.yaml — Infrastructure as Code สำหรับ Render
+# วิธีใช้: Push repo นี้ไป GitHub/GitLab แล้วใน Render กด "New" ▸ "Blueprint" ▸ เลือก repo นี้
+# Render จะสร้าง Service ทั้ง 2 ตัวด้านล่างให้อัตโนมัติ
+#
+# ค่าลับ (MONGODB_URI / BREVO_API_KEY / SENDER_EMAIL ฯลฯ) ตั้งค่าเป็น sync: false
+# → Render จะให้กรอกใน Dashboard ตอน deploy (ไม่ตกอยู่ใน git)
+
+services:
+  # ─────────────────────────────────────────────
+  # Backend (Web Service) — รับคำสั่งส่งเมล + รับ Webhook
+  # ─────────────────────────────────────────────
+  - type: web
+    name: brevo-tracker-server
+    runtime: node
+    rootDir: server
+    plan: free
+    nodeVersion: 20
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false            # ⚠️ กรอก URI จาก MongoDB Atlas
+      - key: BREVO_API_KEY
+        sync: false            # ⚠️ กรอก Brevo API Key
+      - key: SENDER_EMAIL
+        sync: false            # ⚠️ อีเมลผู้ส่งที่ Verify แล้วใน Brevo
+      - key: SENDER_NAME
+        sync: false            # ชื่อแสดงตอนส่ง (เช่น "My App")
+      - key: CLIENT_ORIGIN
+        sync: false            # ⚠️ ใส่ URL ของ Frontend (เช่น https://brevo-tracker-client.onrender.com)
+
+  # ─────────────────────────────────────────────
+  # Frontend (Static Site) — React + Vite + Tailwind
+  # ─────────────────────────────────────────────
+  - type: web
+    name: brevo-tracker-client
+    runtime: static
+    rootDir: client
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    # ตัวแปรถูกฝังตอน build → ชี้กลับมาที่ Backend
+    envVars:
+      - key: VITE_API_URL
+        sync: false            # ⚠️ ใส่ https://brevo-tracker-server.onrender.com/api
+    # กฎ SPA fallback: ให้หน้า /dashboard รีเฟรชแล้วไม่ 404
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
