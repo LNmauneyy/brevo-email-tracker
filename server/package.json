@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Backend สำหรับส่งอีเมลผ่าน Brevo + ติดตามการเปิดอ่านแบบ Real-time ผ่าน Webhook",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js"
